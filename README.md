@@ -1,6 +1,4 @@
-## Python Template Repository
-
-Setup with useful VSC, Git configuration and libraries. 
+## F1 API 
 
 To start:
 ```
@@ -32,3 +30,7 @@ When the env is active you should see the project name before the directory in t
 ```
     (ProjectName) ProjectName>
 ```
+
+## SQL Config 
+
+
