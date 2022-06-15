@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import date, time
 
+from pydantic_collections import BaseCollectionModel
 from pydantic import BaseModel
 
-import response_model as rm
+from db import database as sch
 
 
 class StatusBase(BaseModel):
@@ -134,3 +135,119 @@ class Circuit(CircuitBase):
 
     class Config:
         orm_mode = True
+
+
+class PingResponseBase(BaseModel):
+    name: str
+    status: str
+    version: str
+
+
+class PingResponse(PingResponseBase):
+    pass
+
+
+class ResultResponseBase(BaseModel):
+    constructor_id: int = 0
+    driver_id: int = 0
+    position: Optional[int]
+    status: str = ""
+
+
+class ResultResponse(ResultResponseBase):
+    @classmethod
+    def from_db_class(cls, db_obj: sch.Results, status: str) -> "ResultResponse":
+        res = cls()
+        res.constructor_id = db_obj.constructor_id
+        res.driver_id = db_obj.driver_id
+        res.position = db_obj.position
+        res.status = status
+        return res
+
+    class Config:
+        schema_extra = {
+            "constructor_id": 166,
+            "driver_id": 816,
+            "position": 14,
+            "status": "Finished"
+        }
+
+
+class ResultResList(BaseCollectionModel[ResultResponse]):
+    pass
+
+
+class DriverResponseBase(BaseModel):
+    code: str = ""
+    dob: str = ""
+    driver_id: int = 0
+    forename: str = ""
+    nationality: str = ""
+    number: int = 0
+    surname: str = ""
+    url: str = ""
+
+
+class DriverResponse(DriverResponseBase):
+    @classmethod
+    def from_db_class(cls, driver: sch.Driver) -> "DriverResponse":
+        dob: date = driver.date_of_birth
+        res = cls()
+        res.code = driver.code
+        res.dob = f"{dob.day}/{dob.month}/{dob.year}"
+        res.driver_id = driver.id
+        res.forename = driver.forename
+        res.nationality = driver.nationality
+        res.number = driver.number
+        res.surname = driver.surname
+        res.url = driver.url
+        return res
+
+    class Config:
+        schema_extra = {
+            "code": "HAM",
+            "dob": "7/1/1985",
+            "driver_id": 1,
+            "forename": "Lewis",
+            "nationality": "British",
+            "number": 44,
+            "surname": "Hamilton",
+            "url": "http://en.wikipedia.org/wiki/Lewis_Hamilton"
+        }
+
+
+class LapTimeResponseBase(BaseModel):
+    lap_number: int = 0
+    seconds: float = 0
+
+
+class LapTimeResponse(LapTimeResponseBase):
+    @classmethod
+    def from_db_class(cls, lap_time: sch.LapTime) -> "LapTimeResponse":
+        res = cls()
+        res.lap_number = lap_time.lap
+        res.seconds = lap_time.time_milli / 1000
+        return res
+
+    class Config:
+        schema_extra = {
+            "lap_number": 1,
+            "seconds": 100.573
+        }
+
+
+class DriverLapTimeResponseBase(BaseModel):
+    driver_id: int = 0
+    laptimes: List[LapTimeResponseBase] = []
+
+
+class DriverLapTimeResponse(DriverLapTimeResponseBase):
+    class Config:
+        schema_extra = {
+            "driver_id": 1,
+            "laptimes": [{"lap_number": 1,  "seconds": 100.573}]
+        }
+
+
+class DriverLapTimeResList(BaseCollectionModel[DriverLapTimeResponse]):
+    pass

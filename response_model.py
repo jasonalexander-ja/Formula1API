@@ -1,8 +1,8 @@
-from db import schema
+from db import database as sch
 
 
 class ResultResponse:
-    def __init__(self, results: schema.Results, status: str) -> None:
+    def __init__(self, results: sch.Results, status: str) -> None:
         self.constructor_id = results.constructor_id
         self.driver_id = results.driver_id
         self.position = results.position
@@ -15,7 +15,7 @@ class ResultResponse:
 
 
 class DriverResponse:
-    def __init__(self, driver: schema.Driver) -> None:
+    def __init__(self, driver: sch.Driver) -> None:
         self.code = driver.code
         self.dob = driver.date_of_birth
         self.driver_id = driver.id
@@ -41,7 +41,7 @@ class DriverLapTimeResponse:
 
 
 class LapTimeResponse:
-    def __init__(self, lap_time: schema.LapTime) -> None:
+    def __init__(self, lap_time: sch.LapTime) -> None:
         self.lap_number = lap_time.lap
         self.seconds = lap_time.time_milli / 1000
 

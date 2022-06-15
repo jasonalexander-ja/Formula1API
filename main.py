@@ -4,8 +4,8 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from db.database import SessionLocal
-import response_model as rm
 import db_queries as dbq
+import models
 
 
 def get_db():
@@ -20,14 +20,14 @@ def make_internal_error(e: Exception) -> HTTPException:
     return HTTPException(
         status_code=500,
         detail=f"Couldn't fetch data; error: {type(e)};" +
-        " args: {err.args}; error: {err}"
+        f" args: {e.args}; error: {e}"
     )
 
 
 app = FastAPI()
 
 
-@app.get("/ping")
+@app.get("/ping", response_model=models.PingResponse)
 def ping():
     return {
         "name": "f1_data_service",
@@ -36,7 +36,7 @@ def ping():
     }
 
 
-@app.get("/drivers/{driver_id}")
+@app.get("/drivers/{driver_id}", response_model=models.DriverResponse)
 def read_item(driver_id: int, db: Session = Depends(get_db)):
     if driver_id is None:
         raise HTTPException(status_code=400, detail="Please provide a driver ID")
@@ -46,10 +46,10 @@ def read_item(driver_id: int, db: Session = Depends(get_db)):
         raise make_internal_error(err)
     if driver is None:
         raise HTTPException(status_code=404, detail="Driver not found")
-    return rm.DriverResponse(driver=driver)
+    return models.DriverResponse.from_db_class(driver=driver)
 
 
-@app.get("/race/{race_id}/results")
+@app.get("/race/{race_id}/results", response_model=models.ResultResList)
 def race_results(race_id: int, db: Session = Depends(get_db)):
     if race_id is None:
         raise HTTPException(status_code=400, detail="Please provide a race ID")
@@ -60,10 +60,10 @@ def race_results(race_id: int, db: Session = Depends(get_db)):
     return res
 
 
-@app.get("/race/{race_id}/laptimes")
+@app.get("/race/{race_id}/laptimes", response_model=models.DriverLapTimeResList)
 def lap_times(
     race_id: int,
-    driver_id: Union[list[int], None] = Query(default=None),
+    driver_id: Union[list[int], None] = Query(default=[]),
     db: Session = Depends(get_db)
 ):
     if race_id is None or driver_id is None:
